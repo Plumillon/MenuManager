@@ -1,6 +1,6 @@
 <?php
 
-namespace MenuManager\Exception;
+namespace Plumillon\MenuManager\Exception;
 
 use Exception;
 

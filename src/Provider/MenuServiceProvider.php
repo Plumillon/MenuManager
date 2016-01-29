@@ -1,12 +1,12 @@
 <?php
 
-namespace MenuManager\Provider;
+namespace Plumillon\MenuManager\Provider;
 
 use Pimple\ServiceProviderInterface;
 use Pimple\Container;
 use Silex\Provider\Routing;
-use MenuManager\MenuManager\Item;
-use MenuManager\MenuManager;
+use Plumillon\MenuManager\MenuManager\Item;
+use Plumillon\MenuManager\MenuManager;
 
 class MenuServiceProvider implements ServiceProviderInterface {
 

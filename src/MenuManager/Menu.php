@@ -1,6 +1,6 @@
 <?php
 
-namespace MenuManager\MenuManager;
+namespace Plumillon\MenuManager\MenuManager;
 
 use Pimple\Container;
 

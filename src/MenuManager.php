@@ -1,10 +1,10 @@
 <?php
 
-namespace MenuManager;
+namespace Plumillon\MenuManager;
 
 use Pimple\Container;
-use MenuManager\MenuManager\Item;
-use MenuManager\MenuManager\Menu;
+use Plumillon\MenuManager\MenuManager\Item;
+use Plumillon\MenuManager\MenuManager\Menu;
 
 class MenuManager {
 	protected $app;

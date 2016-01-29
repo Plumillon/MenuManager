@@ -1,10 +1,10 @@
 <?php
 
-namespace MenuManager\MenuManager;
+namespace Plumillon\MenuManager\MenuManager;
 
 use Pimple\Container;
 use MenuManager;
-use MenuManager\Exception\MenuManagerException;
+use Plumillon\MenuManager\Exception\MenuManagerException;
 
 abstract class MenuAbstract {
 	protected $app;
