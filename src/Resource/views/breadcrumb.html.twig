@@ -1,0 +1,13 @@
+<ol class="breadcrumb">
+{% for breadcrumb in breadcrumbList %}
+<li{{ loop.last ? ' class="active"' }}>
+{% if loop.last == false %}
+<a href="{{ breadcrumb.url }}">
+{% endif %}
+{{ breadcrumb.text }}
+{% if loop.last == false %}
+</a>
+{% endif %}
+</li>
+{% endfor %}
+</ol>
