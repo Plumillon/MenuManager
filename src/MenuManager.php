@@ -21,6 +21,8 @@ class MenuManager {
 	}
 
 	public function load($name = 'main', Item $item = null, $paramList = [], $activeOnly = false) {
+		$menu = null;
+
 		if($item != null)
 			$menu = $this->findMenu($item->getSubList(), $name);
 		else {
