@@ -7,6 +7,7 @@ use Pimple\Container;
 use Silex\Provider\Routing;
 use Plumillon\MenuManager\MenuManager\Item;
 use Plumillon\MenuManager\MenuManager;
+use Symfony\Component\HttpFoundation\Request;
 
 class MenuServiceProvider implements ServiceProviderInterface {
 
@@ -16,7 +17,7 @@ class MenuServiceProvider implements ServiceProviderInterface {
 		};
 		
 		$app['twig.loader.filesystem'] = $app->extend('twig.loader.filesystem', function ($filesystem, $app) {
-			$filesystem->addPath(__DIR__ . '/../Resource/views', 'defaultMenu');
+			$filesystem->addPath(__DIR__ . '/../Resource/views', 'MenuManager');
 			
 			return $filesystem;
 		});
@@ -26,11 +27,16 @@ class MenuServiceProvider implements ServiceProviderInterface {
 				return $app['menu_manager']->render($which, $item, $paramList, $activeOnly);
 			}));
 			
-			$twig->addFunction(new \Twig_SimpleFunction('breadcrumb', function () use($app) {
-				return $app['menu_manager']->renderBreadcrumb();
+			$twig->addFunction(new \Twig_SimpleFunction('breadcrumb', function ($paramList = []) use($app) {
+				return $app['menu_manager']->renderBreadcrumb($paramList);
 			}));
 			
 			return $twig;
+		});
+
+		// Current route name
+		$app->before(function(Request $request) use ($app) {
+			$app['menu_manager']->setCurrentRoute($request->get('_route'));
 		});
 	}
 }

@@ -10,7 +10,8 @@ class MenuManager {
 	protected $app;
 	protected $config = [];
 	protected $menuList = [];
-	protected $activeItemList = [];
+	protected $activeItem = null;
+	protected $currentRoute = '';
 
 	public function __construct(Container $app, $config) {
 		$this->app = $app;
@@ -22,15 +23,15 @@ class MenuManager {
 
 	public function load($name = 'main', Item $item = null, $paramList = [], $activeOnly = false) {
 		$menu = null;
-
+		
 		if($item != null)
 			$menu = $this->findMenu($item->getSubList(), $name);
 		else {
-			foreach($this->activeItemList as $item) {
-				$menu = $this->findMenu($item->getSubList(), $name);
+			if($this->activeItem != null) {
+				$menu = $this->findMenu($this->activeItem->getSubList(), $name);
 				
-				if($menu != null)
-					break;
+				if($menu == null)
+					$menu = $this->findMenuReverse($this->activeItem, $name);
 			}
 			
 			if($menu == null && !$activeOnly)
@@ -56,17 +57,17 @@ class MenuManager {
 			if(!empty($paramList) && $menu->getParamList() != $paramList)
 				$menu->setParamList($paramList);
 			
-			$menu->generate();
+			$menu->initActive();
 		}
 		
 		return $menu;
 	}
 
-	public function renderBreadcrumb() {
+	public function renderBreadcrumb($paramList = []) {
 		$breadcrumb = '';
 		
-		if(!empty($this->activeItemList))
-			$breadcrumb = $this->activeItemList[0]->renderBreadcrumb();
+		if($this->activeItem != null)
+			$breadcrumb = $this->activeItem->renderBreadcrumb($paramList);
 		
 		return $breadcrumb;
 	}
@@ -108,6 +109,22 @@ class MenuManager {
 		return null;
 	}
 
+	protected function findMenuReverse($item, $name = 'main') {
+		$foundMenu = null;
+		
+		if($item != null)
+			if($item instanceof Menu)
+				$foundMenu = $this->findMenuReverse($item->getParent(), $name);
+			else {
+				$foundMenu = $this->findMenu($item->getSubList(), $name);
+				
+				if($foundMenu == null)
+					$foundMenu = $this->findMenuReverse($item->getParent(), $name);
+			}
+		
+		return $foundMenu;
+	}
+
 	public function render($name = 'main', Item $item = null, $paramList = [], $activeOnly = false) {
 		$menu = $this->load($name, $item, $paramList, $activeOnly);
 		
@@ -117,7 +134,20 @@ class MenuManager {
 		return '';
 	}
 
-	public function addActiveItem(Item $item) {
-		$this->activeItemList[] = $item;
+	public function setActiveItem(Item $item) {
+		if($this->activeItem == null)
+			$this->activeItem = $item;
+		elseif($item->getDepth() >= $this->activeItem->getDepth()) {
+			$this->activeItem->setActive(false);
+			$this->activeItem = $item;
+		}
+	}
+
+	public function setCurrentRoute($name) {
+		$this->currentRoute = $name;
+	}
+
+	public function getCurrentRoute() {
+		return $this->currentRoute;
 	}
 }

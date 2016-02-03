@@ -6,8 +6,8 @@ use Pimple\Container;
 
 class Menu extends MenuAbstract {
 	public $name = 'main';
-	protected $template = '@defaultMenu/default.html.twig';
-	protected $itemTemplate = '@defaultMenu/item.html.twig';
+	protected $template = '@MenuManager/default.html.twig';
+	protected $itemTemplate = '@MenuManager/item.html.twig';
 	protected $itemList = [];
 
 	public function init(Array $optionList) {
@@ -25,8 +25,7 @@ class Menu extends MenuAbstract {
 				if(isset($optionList['params']))
 					$item['params'] = $optionList['params'];
 
-				$itemAdd = new Item($this->app, $item);
-				$itemAdd->setParent($this);
+				$itemAdd = new Item($this->app, $item, $this);
 				$this->itemList[] = $itemAdd;
 			}
 	}
@@ -36,9 +35,9 @@ class Menu extends MenuAbstract {
 			$item->setParamList($this->paramList);
 	}
 
-	public function generate() {
+	public function initActive() {
 		foreach($this->itemList as $item)
-			$item->generate();;
+			$item->initActive();
 	}
 
 	public function render() {

@@ -14,19 +14,22 @@ abstract class MenuAbstract {
 	protected $allowedParamList = [];
 	protected $paramList = [];
 	protected $isActive = false;
-	protected $breadcrumbTemplate = '@defaultMenu/breadcrumb.html.twig';
+	protected $breadcrumbTemplate = '@MenuManager/breadcrumb.html.twig';
 	protected $depth = 0;
 
 	abstract function init(Array $optionList);
 	abstract function initParamList();
 	abstract function render();
 
-	public function __construct(Container $app, Array $optionList) {
+	public function __construct(Container $app, Array $optionList, MenuAbstract $parent = null) {
 		$this->app = $app;
 		$this->initBulkConfig($optionList, ['template', 'itemTemplate', 'breadcrumbTemplate', 'allowAllParams', 'allowedParamList' => 'allowedParams']);
 
 		if(isset($optionList['params']))
 			$this->setParamList($optionList['params']);
+
+		if($parent != null)
+			$this->setParent($parent);
 
 		$this->init($optionList);
 	}
