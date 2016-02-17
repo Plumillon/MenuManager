@@ -5,6 +5,8 @@ namespace Plumillon\MenuManager;
 use Pimple\Container;
 use Plumillon\MenuManager\MenuManager\Item;
 use Plumillon\MenuManager\MenuManager\Menu;
+use Plumillon\MenuManager\Listener\MenuManagerListener;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 
 class MenuManager {
 	protected $app;
@@ -12,10 +14,13 @@ class MenuManager {
 	protected $menuList = [];
 	protected $activeItem = null;
 	protected $currentRoute = '';
+	protected $currenParamList = [];
+	protected $eventDispatcher;
 
 	public function __construct(Container $app, $config) {
 		$this->app = $app;
 		$this->config = $config;
+		$this->eventDispatcher = new EventDispatcher();
 		
 		foreach($config as $menuConfig)
 			$this->menuList[] = new Menu($app, $menuConfig);
@@ -59,7 +64,9 @@ class MenuManager {
 			
 			$menu->initActive();
 		}
-		
+
+		$this->eventDispatcher->dispatch(MenuManagerListener::EVENT_MENU_LOADED);
+
 		return $menu;
 	}
 
@@ -143,11 +150,38 @@ class MenuManager {
 		}
 	}
 
+	public function getActiveItem() {
+		return $this->activeItem;
+	}
+
 	public function setCurrentRoute($name) {
 		$this->currentRoute = $name;
 	}
 
 	public function getCurrentRoute() {
 		return $this->currentRoute;
+	}
+
+	public function setCurrentParamList($paramList) {
+		$this->currenParamList = $paramList;
+	}
+
+	public function getCurrentParamList() {
+		return $this->currenParamList;
+	}
+
+	public function addCurrentParam($key, $value) {
+		$this->currenParamList[$key] = $value;
+	}
+
+	public function addCurrentParamList($paramList) {
+		array_merge($this->currenParamList, $paramList);
+	}
+
+	public function addListener($listener, $event, $action = null) {
+		if($listener instanceof MenuManagerListener)
+			$this->eventDispatcher->addListener($event, [$listener, $action]);
+		elseif($listener instanceof \Closure)
+			$this->eventDispatcher->addListener($event, $listener);
 	}
 }

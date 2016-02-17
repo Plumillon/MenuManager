@@ -3,18 +3,23 @@
 namespace Plumillon\MenuManager\MenuManager;
 
 use Pimple\Container;
+use Plumillon\MenuManager\Exception\MenuManagerException;
 
 class Item extends MenuAbstract {
-	public $path;
-	public $url;
-	public $text;
+	protected $path;
+	protected $url;
+	protected $text;
+	protected $trans;
+	protected $display = true;
 	protected $subList = [];
 
 	public function init(Array $optionList) {
 		$this->initBulkConfig($optionList, [
 			'url',
 			'text',
-			'path'
+			'trans',
+			'path',
+			'display'
 		]);
 		
 		if(isset($optionList['subs']) && is_array($optionList['subs']))
@@ -28,6 +33,9 @@ class Item extends MenuAbstract {
 				$subMenu = new Menu($this->app, $subMenuConfig, $this);
 				$this->subList[] = $subMenu;
 			}
+		
+		if($this->trans != null)
+			$this->setTrans($this->trans);
 	}
 
 	public function initParamList() {
@@ -36,30 +44,36 @@ class Item extends MenuAbstract {
 	}
 
 	public function render() {
-		$this->paramList = $this->getAllowedParamList($this->paramList);
-		
-		if($this->path != null) {
-			// Override given URL with the corresponding path
-			$this->url = $this->app['url_generator']->generate($this->path, $this->paramList);
-			// $this->setActive($this->app['request']->getRequestUri() == $this->url);
-		} else {
-			if(!empty($this->paramList)) {
-				$urlParamList = $this->paramList;
-				array_walk($urlParamList, function (&$item, $key) {
-					$item = $key . '=' . $item;
-				});
-				$urlParam = implode('&', $urlParamList);
-				$this->url .= '?' . $urlParam;
+		if($this->display) {
+			$this->paramList = $this->getAllowedParamList($this->paramList);
+			
+			if($this->path != null) {
+				// Override given URL with the corresponding path
+				$this->url = $this->app['url_generator']->generate($this->path, $this->paramList);
+			} else {
+				if(!empty($this->paramList)) {
+					$urlParamList = $this->paramList;
+					array_walk($urlParamList, function (&$item, $key) {
+						$item = $key . '=' . $item;
+					});
+					$urlParam = implode('&', $urlParamList);
+					$this->url .= '?' . $urlParam;
+				}
 			}
+			
+			$this->display = $this->app['menu_manager.security']->isGranted($this->url);
+			
+			if($this->display)
+				return $this->app['twig']->render($this->template, [
+					'item' => $this
+				]);
 		}
 		
-		return $this->app['twig']->render($this->template, [
-			'item' => $this
-		]);
+		return '';
 	}
 
 	public function initActive() {
-		$currentParamList = array_merge($this->app['request']->attributes->get('_route_params'), $this->app['request']->query->all());
+		$currentParamList = array_merge($this->app['request']->attributes->get('_route_params'), $this->app['request']->query->all(), $this->app['menu_manager']->getCurrentParamList());
 		$potentialParamList = $this->getAllowedParamList($currentParamList);
 		
 		// var_dump($this->app['request']->getRequestUri());
@@ -74,11 +88,13 @@ class Item extends MenuAbstract {
 
 	public function renderBreadcrumb($paramList = []) {
 		foreach($this->getBreadcrumb() as $breadcrumb) {
-			$breadcrumb->paramList = $breadcrumb->getAllowedParamList($paramList);
-			
-			if($breadcrumb->path != null) {
-				// Override given URL with the corresponding path
-				$breadcrumb->url = $this->app['url_generator']->generate($breadcrumb->path, $breadcrumb->paramList);
+			if($breadcrumb->display) {
+				$breadcrumb->paramList = $breadcrumb->getAllowedParamList($paramList);
+				
+				if($breadcrumb->path != null) {
+					// Override given URL with the corresponding path
+					$breadcrumb->url = $this->app['url_generator']->generate($breadcrumb->path, $breadcrumb->paramList);
+				}
 			}
 		}
 		
@@ -88,6 +104,8 @@ class Item extends MenuAbstract {
 	}
 
 	private function getAllowedParamList($paramList = []) {
+		$paramList = array_merge($paramList, $this->app['menu_manager']->getCurrentParamList());
+		
 		if($this->allowAllParams)
 			return $paramList;
 		
@@ -95,7 +113,7 @@ class Item extends MenuAbstract {
 			$route = ($this->app['routes'] != null ? $this->app['routes']->get($this->path) : null);
 			
 			if($route != null) {
-				// Alowed params
+				// Allowed params
 				$routeParamList = $route->compile()->getVariables();
 				$routeParamList = array_merge($routeParamList, $this->allowedParamList);
 				
@@ -115,7 +133,21 @@ class Item extends MenuAbstract {
 		return $paramList;
 	}
 
+	public function getText() {
+		return $this->text;
+	}
+
+	public function getUrl() {
+		return $this->url;
+	}
+
 	public function getSubList() {
 		return $this->subList;
+	}
+
+	public function setTrans($trans) {
+		list($trad, $domain, $locale) = array_merge(array_pad(array_reverse(explode('-', $trans)), 3, null));
+		
+		$this->text = $this->app['translator']->trans($trad, [], $domain, $locale);
 	}
 }

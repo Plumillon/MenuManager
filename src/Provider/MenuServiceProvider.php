@@ -7,6 +7,7 @@ use Pimple\Container;
 use Silex\Provider\Routing;
 use Plumillon\MenuManager\MenuManager\Item;
 use Plumillon\MenuManager\MenuManager;
+use Plumillon\MenuManager\Service\MenuSecurityService;
 use Symfony\Component\HttpFoundation\Request;
 
 class MenuServiceProvider implements ServiceProviderInterface {
@@ -14,6 +15,10 @@ class MenuServiceProvider implements ServiceProviderInterface {
 	public function register(Container $app) {
 		$app['menu_manager'] = function ($app) {
 			return new MenuManager($app, $app['menu']);
+		};
+		
+		$app['menu_manager.security'] = function ($app) {
+			return new MenuSecurityService($app);
 		};
 		
 		$app['twig.loader.filesystem'] = $app->extend('twig.loader.filesystem', function ($filesystem, $app) {
@@ -33,9 +38,9 @@ class MenuServiceProvider implements ServiceProviderInterface {
 			
 			return $twig;
 		});
-
+		
 		// Current route name
-		$app->before(function(Request $request) use ($app) {
+		$app->before(function (Request $request) use($app) {
 			$app['menu_manager']->setCurrentRoute($request->get('_route'));
 		});
 	}
