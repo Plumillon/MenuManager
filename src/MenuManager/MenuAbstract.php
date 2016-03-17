@@ -16,6 +16,7 @@ abstract class MenuAbstract {
 	protected $allowedRoleList = [];
 	protected $isActive = false;
 	protected $breadcrumbTemplate = '@MenuManager/breadcrumb.html.twig';
+	protected $breadcrumbLength = 20;
 	protected $depth = 0;
 
 	abstract function init(Array $optionList);
@@ -30,6 +31,7 @@ abstract class MenuAbstract {
 			'template',
 			'itemTemplate',
 			'breadcrumbTemplate',
+		    'breadcrumbLength',
 			'allowAllParams',
 			'allowedParamList' => 'allowedParams',
 			'allowedRoleList' => 'allowedRoles'
@@ -114,6 +116,10 @@ abstract class MenuAbstract {
 		}
 		
 		return false;
+	}
+
+	public function getBreadcrumbLength() {
+	    return $this->breadcrumbLength;
 	}
 
 	public function getDepth() {
