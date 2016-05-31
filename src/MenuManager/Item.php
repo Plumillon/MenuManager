@@ -94,18 +94,18 @@ class Item extends MenuAbstract
 
     public function renderBreadcrumb($paramList = [])
     {
-        $breadcrumbList = $this->getBreadcrumb();
+        $breadcrumbList = [];
 
-        foreach ($breadcrumbList as $breadcrumb) {
+        foreach ($this->getBreadcrumb() as $breadcrumb)
             if ($breadcrumb->display) {
                 $breadcrumb->paramList = $breadcrumb->getAllowedParamList($paramList);
                 
                 if ($breadcrumb->path != null)
                     // Override given URL with the corresponding path
                     $breadcrumb->url = $this->app['url_generator']->generate($breadcrumb->path, $breadcrumb->paramList);
-            } else
-                unset($breadcrumbList[$key]);
-        }
+
+                $breadcrumbList[] = $breadcrumb;
+            }
         
         return $this->app['twig']->render($this->breadcrumbTemplate, [
             'breadcrumbList' => array_reverse($breadcrumbList),
